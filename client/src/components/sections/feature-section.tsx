@@ -155,7 +155,6 @@ export function FeatureSection({
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ scale: 1.02, rotate: reversed ? 2 : -2 }}
             >
-              <div className="absolute inset-0 glass-strong rounded-3xl z-10 pointer-events-none" />
               <OptimizedImage
                 src={image}
                 alt={imageAlt}
