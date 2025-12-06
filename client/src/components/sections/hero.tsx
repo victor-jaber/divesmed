@@ -3,6 +3,7 @@ import { useRef } from "react";
 import heroBg from "@assets/generated_images/hero_background_luxury_medical_aesthetic.png";
 import { Particles } from "@/components/effects/particles";
 import { MagneticButton } from "@/components/effects/magnetic-button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { ChevronDown } from "lucide-react";
 
 export function Hero() {
@@ -26,10 +27,11 @@ export function Hero() {
         className="absolute inset-0 z-0"
         style={{ y, scale }}
       >
-        <img
+        <OptimizedImage
           src={heroBg}
           alt="Medical Aesthetic Background"
-          className="w-full h-full object-cover opacity-40"
+          className="w-full h-full opacity-40"
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background" />

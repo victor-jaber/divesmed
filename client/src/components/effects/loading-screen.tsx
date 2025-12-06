@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface LoadingScreenProps {
   images: string[];
@@ -10,42 +10,61 @@ interface LoadingScreenProps {
 export function LoadingScreen({ images, onComplete, minDuration = 2000 }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+
+  const preloadImage = useCallback((src: string): Promise<void> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        setLoadedImages(prev => new Set(prev).add(src));
+        resolve();
+      };
+      img.onerror = () => {
+        console.warn(`Failed to load image: ${src}`);
+        setLoadedImages(prev => new Set(prev).add(src));
+        resolve();
+      };
+      img.src = src;
+    });
+  }, []);
 
   useEffect(() => {
-    let loadedCount = 0;
-    const totalImages = images.length;
     const startTime = Date.now();
+    const totalImages = images.length;
 
-    const updateProgress = () => {
-      loadedCount++;
-      const imageProgress = (loadedCount / totalImages) * 100;
-      setProgress(imageProgress);
-
-      if (loadedCount === totalImages) {
+    const loadAllImages = async () => {
+      if (totalImages === 0) {
+        setProgress(100);
         const elapsed = Date.now() - startTime;
         const remainingTime = Math.max(0, minDuration - elapsed);
-        
         setTimeout(() => {
           setIsComplete(true);
           setTimeout(onComplete, 800);
         }, remainingTime);
+        return;
       }
-    };
 
-    images.forEach((src) => {
-      const img = new Image();
-      img.onload = updateProgress;
-      img.onerror = updateProgress;
-      img.src = src;
-    });
+      let loaded = 0;
+      
+      await Promise.all(
+        images.map(async (src) => {
+          await preloadImage(src);
+          loaded++;
+          setProgress((loaded / totalImages) * 100);
+        })
+      );
 
-    if (totalImages === 0) {
+      const elapsed = Date.now() - startTime;
+      const remainingTime = Math.max(0, minDuration - elapsed);
+      
       setTimeout(() => {
         setIsComplete(true);
         setTimeout(onComplete, 800);
-      }, minDuration);
-    }
-  }, [images, onComplete, minDuration]);
+      }, remainingTime);
+    };
+
+    loadAllImages();
+  }, [images, onComplete, minDuration, preloadImage]);
 
   return (
     <AnimatePresence>
@@ -151,9 +170,19 @@ export function LoadingScreen({ images, onComplete, minDuration = 2000 }: Loadin
               </div>
             </motion.div>
 
+            {/* Image count */}
+            <motion.p
+              className="mt-4 text-white/30 text-xs"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              {loadedImages.size} de {images.length} imagens
+            </motion.p>
+
             {/* Tagline */}
             <motion.p
-              className="mt-8 text-white/40 text-sm tracking-widest uppercase"
+              className="mt-6 text-white/40 text-sm tracking-widest uppercase"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}

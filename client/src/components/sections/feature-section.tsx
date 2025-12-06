@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { MagneticButton } from "@/components/effects/magnetic-button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { ArrowRight } from "lucide-react";
 
 interface FeatureSectionProps {
@@ -154,19 +155,19 @@ export function FeatureSection({
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ scale: 1.02, rotate: reversed ? 2 : -2 }}
             >
-              <div className="absolute inset-0 glass-strong rounded-3xl" />
-              <img 
-                src={image} 
-                alt={imageAlt} 
-                className="w-full h-full object-cover rounded-3xl"
+              <div className="absolute inset-0 glass-strong rounded-3xl z-10 pointer-events-none" />
+              <OptimizedImage
+                src={image}
+                alt={imageAlt}
+                className="w-full h-full rounded-3xl"
               />
               {/* Overlay gradient */}
               <div className={cn(
-                "absolute inset-0 bg-gradient-to-t rounded-3xl",
+                "absolute inset-0 bg-gradient-to-t rounded-3xl pointer-events-none",
                 accentColors[accentColor]
               )} />
               {/* Decorative frame */}
-              <div className="absolute inset-4 border border-white/20 rounded-2xl pointer-events-none" />
+              <div className="absolute inset-4 border border-white/20 rounded-2xl pointer-events-none z-20" />
             </motion.div>
           </motion.div>
         </div>
