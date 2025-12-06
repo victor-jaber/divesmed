@@ -1,6 +1,7 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { MagneticButton } from "@/components/effects/magnetic-button";
 import { ArrowRight } from "lucide-react";
 
 interface FeatureSectionProps {
@@ -11,7 +12,7 @@ interface FeatureSectionProps {
   image: string;
   imageAlt: string;
   reversed?: boolean;
-  theme?: "light" | "dark";
+  accentColor?: "cyan" | "gold" | "purple";
 }
 
 export function FeatureSection({
@@ -22,88 +23,154 @@ export function FeatureSection({
   image,
   imageAlt,
   reversed = false,
-  theme = "light",
+  accentColor = "cyan",
 }: FeatureSectionProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
+  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 1, 1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.8, 1, 1, 0.8]);
+  
+  const accentColors = {
+    cyan: "from-primary/30 to-primary/5",
+    gold: "from-secondary/30 to-secondary/5",
+    purple: "from-accent/30 to-accent/5",
+  };
+  
+  const glowColors = {
+    cyan: "glow-cyan",
+    gold: "glow-gold", 
+    purple: "glow-purple",
+  };
+  
+  const textColors = {
+    cyan: "text-primary",
+    gold: "text-secondary",
+    purple: "text-accent",
+  };
+
   return (
     <section 
+      ref={ref}
       id={id}
-      className={cn(
-        "py-24 md:py-32 overflow-hidden",
-        theme === "dark" ? "bg-primary text-white" : "bg-background text-foreground"
-      )}
+      className="relative py-32 md:py-48 overflow-hidden"
+      style={{ position: 'relative' }}
     >
-      <div className="container mx-auto px-4 md:px-6">
+      {/* Background glow */}
+      <div className={cn(
+        "absolute inset-0 bg-gradient-radial opacity-50",
+        accentColors[accentColor]
+      )} />
+      
+      <motion.div 
+        className="container mx-auto px-4 md:px-6"
+        style={{ opacity }}
+      >
         <div className={cn(
-          "flex flex-col md:flex-row items-center gap-12 md:gap-20",
-          reversed ? "md:flex-row-reverse" : ""
+          "flex flex-col lg:flex-row items-center gap-12 lg:gap-20",
+          reversed ? "lg:flex-row-reverse" : ""
         )}>
           
           {/* Text Content */}
           <motion.div 
-            className="flex-1 space-y-6"
+            className="flex-1 space-y-6 text-center lg:text-left"
             initial={{ opacity: 0, x: reversed ? 50 : -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
             {subtitle && (
-              <span className={cn(
-                "text-sm font-bold tracking-[0.2em] uppercase",
-                theme === "dark" ? "text-white/70" : "text-secondary"
-              )}>
+              <motion.span 
+                className={cn(
+                  "inline-block text-sm font-bold tracking-[0.3em] uppercase",
+                  textColors[accentColor]
+                )}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
                 {subtitle}
-              </span>
+              </motion.span>
             )}
             
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif font-medium leading-tight">
+            <motion.h2 
+              className="text-4xl md:text-5xl lg:text-7xl font-serif font-medium leading-tight text-white"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+            >
               {title}
-            </h2>
+            </motion.h2>
             
-            <p className={cn(
-              "text-lg leading-relaxed max-w-xl",
-              theme === "dark" ? "text-white/80" : "text-muted-foreground"
-            )}>
+            <motion.p 
+              className="text-lg md:text-xl leading-relaxed max-w-xl mx-auto lg:mx-0 text-white/60"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+            >
               {description}
-            </p>
+            </motion.p>
             
-            <div className="pt-4">
-              <Button 
-                variant="link" 
+            <motion.div 
+              className="pt-6"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+            >
+              <MagneticButton 
                 className={cn(
-                  "p-0 text-lg h-auto font-medium tracking-wide group",
-                  theme === "dark" ? "text-white decoration-white" : "text-primary decoration-primary"
+                  "inline-flex items-center gap-3 px-8 py-4 glass rounded-full font-medium tracking-wide group",
+                  textColors[accentColor]
                 )}
                 onClick={() => window.open("https://divesmed.com.br", "_blank")}
               >
                 DESCUBRA MAIS
-                <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </div>
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />
+              </MagneticButton>
+            </motion.div>
           </motion.div>
 
           {/* Image Content */}
           <motion.div 
-            className="flex-1 w-full"
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            className="flex-1 w-full max-w-lg lg:max-w-none"
+            style={{ y, scale }}
           >
-            <div className="relative aspect-[4/5] md:aspect-square overflow-hidden bg-muted">
+            <motion.div 
+              className={cn(
+                "relative aspect-square overflow-hidden rounded-3xl",
+                glowColors[accentColor]
+              )}
+              initial={{ opacity: 0, scale: 0.8, rotate: reversed ? -5 : 5 }}
+              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ scale: 1.02, rotate: reversed ? 2 : -2 }}
+            >
+              <div className="absolute inset-0 glass-strong rounded-3xl" />
               <img 
                 src={image} 
                 alt={imageAlt} 
-                className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                className="w-full h-full object-cover rounded-3xl"
               />
-              {/* Decorative border */}
+              {/* Overlay gradient */}
               <div className={cn(
-                "absolute inset-4 border border-white/30 pointer-events-none",
-                theme === "light" ? "border-white/50" : "border-white/20"
+                "absolute inset-0 bg-gradient-to-t rounded-3xl",
+                accentColors[accentColor]
               )} />
-            </div>
+              {/* Decorative frame */}
+              <div className="absolute inset-4 border border-white/20 rounded-2xl pointer-events-none" />
+            </motion.div>
           </motion.div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
